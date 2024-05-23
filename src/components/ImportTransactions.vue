@@ -43,7 +43,7 @@
   
         try {
           await api.importTransactions(formData);
-          this.$router.push({ path: '/protected/transactions', query: { account_id: this.accountId } });
+          this.$router.push({ path: '/protected/accounts', query: { account_id: this.accountId } });
         } catch (error) {
           console.error('Error importing transactions:', error);
         }

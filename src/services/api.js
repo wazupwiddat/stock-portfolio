@@ -51,6 +51,25 @@ const api = {
     });
     return response.data;
   },
+  async updateTransaction(transactionData) {
+    const payload = {
+      Date: transactionData.date,
+      Action: transactionData.action,
+      Symbol: transactionData.symbol,
+      Description: transactionData.description,
+      Quantity: transactionData.quantity,
+      Price: transactionData.price,
+      FeesComm: transactionData.fees_comm,
+      Amount: transactionData.amount,
+      AccountID: parseInt(transactionData.account_id, 10) // Ensure AccountID is an integer
+    };
+    const response = await axios.put(`${API_URL}/protected/transactions/${transactionData.id}`, payload, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+    return response.data;
+  },
   async getPositions(accountId) {
     const response = await axios.get(`${API_URL}/protected/positions`, {
       headers: {

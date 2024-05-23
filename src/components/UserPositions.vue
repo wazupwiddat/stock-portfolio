@@ -3,7 +3,10 @@
     <b-row>
       <b-col>
         <h1>Positions</h1>
-        <b-table :items="formattedPositions" :fields="fields" class="mt-3"></b-table>
+        <b-button @click="toggleOpenedFilter" class="mb-3">
+          {{ showOpened ? 'Show All Positions' : 'Show Opened Positions' }}
+        </b-button>
+        <b-table :items="filteredPositions" :fields="fields" class="mt-3"></b-table>
       </b-col>
     </b-row>
   </b-container>
@@ -17,8 +20,8 @@ export default {
   data() {
     return {
       positions: [],
+      showOpened: false, // New data property for toggling
       fields: [
-        { key: 'ID', label: 'ID' },
         { key: 'Symbol', label: 'Symbol' },
         { key: 'UnderlyingSymbol', label: 'Underlying Symbol' },
         { key: 'Quantity', label: 'Quantity' },
@@ -37,6 +40,12 @@ export default {
           GainLoss: this.$options.filters.currency(position.GainLoss)
         };
       });
+    },
+    filteredPositions() {
+      if (this.showOpened) {
+        return this.formattedPositions.filter(position => position.Opened);
+      }
+      return this.formattedPositions;
     }
   },
   async created() {
@@ -56,6 +65,9 @@ export default {
       } catch (error) {
         console.error('Error fetching positions:', error);
       }
+    },
+    toggleOpenedFilter() {
+      this.showOpened = !this.showOpened;
     }
   }
 };
