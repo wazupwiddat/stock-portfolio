@@ -44,7 +44,7 @@
           <b-form-input v-model="newTransaction.Price" required></b-form-input>
         </b-form-group>
         <b-form-group label="Fees/Commission">
-          <b-form-input v-model="newTransaction.Fees" type="number" step="0.01" required></b-form-input>
+          <b-form-input v-model="newTransaction.FeesComm" type="number" step="0.01" required></b-form-input>
         </b-form-group>
         <b-form-group label="Amount">
           <b-form-input v-model="newTransaction.Amount" required></b-form-input>
@@ -74,7 +74,7 @@
           <b-form-input v-model="selectedTransaction.Price" required></b-form-input>
         </b-form-group>
         <b-form-group label="Fees/Commission">
-          <b-form-input v-model="selectedTransaction.Fees" type="number" step="0.01" required></b-form-input>
+          <b-form-input v-model="selectedTransaction.FeesComm" type="number" step="0.01" required></b-form-input>
         </b-form-group>
         <b-form-group label="Amount">
           <b-form-input v-model="selectedTransaction.Amount" required></b-form-input>
@@ -99,7 +99,7 @@ export default {
         Description: '',
         Quantity: '',
         Price: '',
-        Fees: '',
+        FeesComm: '',
         Amount: '',
         AccountID: ''
       },
@@ -110,7 +110,7 @@ export default {
         Description: '',
         Quantity: '',
         Price: '',
-        Fees: '',
+        FeesComm: '',
         Amount: '',
         AccountID: ''
       },
@@ -152,7 +152,7 @@ export default {
       this.$router.push('/protected/accounts');
       return;
     }
-    this.newTransaction.AccountID = accountId;
+    this.newTransaction.AccountID = parseInt(accountId, 10); // Ensure AccountID is an integer
     await this.fetchTransactions();
   },
   methods: {
@@ -180,7 +180,7 @@ export default {
           Description: '',
           Quantity: '',
           Price: '',
-          Fees: '',
+          FeesComm: '',
           Amount: '',
           AccountID: this.newTransaction.AccountID
         };
@@ -224,7 +224,7 @@ export default {
         Description: '',
         Quantity: '',
         Price: '',
-        Fees: '',
+        FeesComm: '',
         Amount: '',
         AccountID: ''
       };

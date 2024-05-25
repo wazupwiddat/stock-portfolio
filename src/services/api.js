@@ -34,15 +34,15 @@ const api = {
   },
   async createTransaction(transactionData) {
     const payload = {
-      Date: transactionData.date,
-      Action: transactionData.action,
-      Symbol: transactionData.symbol,
-      Description: transactionData.description,
-      Quantity: transactionData.quantity,
-      Price: transactionData.price,
-      FeesComm: transactionData.fees_comm,
-      Amount: transactionData.amount,
-      AccountID: parseInt(transactionData.account_id, 10) // Ensure AccountID is an integer
+      Date: transactionData.Date,
+      Action: transactionData.Action,
+      Symbol: transactionData.Symbol,
+      Description: transactionData.Description,
+      Quantity: transactionData.Quantity,
+      Price: transactionData.Price,
+      FeesComm: transactionData.FeesComm,
+      Amount: transactionData.Amount,
+      AccountID: transactionData.AccountID
     };
     const response = await axios.post(`${API_URL}/protected/transactions`, payload, {
       headers: {
@@ -53,15 +53,15 @@ const api = {
   },
   async updateTransaction(transactionData) {
     const payload = {
-      Date: transactionData.date,
-      Action: transactionData.action,
-      Symbol: transactionData.symbol,
-      Description: transactionData.description,
-      Quantity: transactionData.quantity,
-      Price: transactionData.price,
-      FeesComm: transactionData.fees_comm,
-      Amount: transactionData.amount,
-      AccountID: parseInt(transactionData.account_id, 10) // Ensure AccountID is an integer
+      Date: transactionData.Date,
+      Action: transactionData.Action,
+      Symbol: transactionData.Symbol,
+      Description: transactionData.Description,
+      Quantity: transactionData.Quantity,
+      Price: transactionData.Price,
+      FeesComm: transactionData.Fees,
+      Amount: transactionData.Amount,
+      AccountID: transactionData.AccountID
     };
     const response = await axios.put(`${API_URL}/protected/transactions/${transactionData.id}`, payload, {
       headers: {
@@ -69,6 +69,14 @@ const api = {
       }
     });
     return response.data;
+  },
+  async deleteTransaction(transactionId) {
+    const response = await axios.delete(`${API_URL}/protected/transactions/${transactionId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+    return response.status === 204;
   },
   async getPositions(accountId) {
     const response = await axios.get(`${API_URL}/protected/positions`, {
