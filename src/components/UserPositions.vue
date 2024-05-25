@@ -6,7 +6,19 @@
         <b-button @click="toggleOpenedFilter" class="mb-3">
           {{ showOpened ? 'Show All Positions' : 'Show Opened Positions' }}
         </b-button>
-        <b-table :items="filteredPositions" :fields="fields" class="mt-3"></b-table>
+        <div v-for="(group, underlyingSymbol) in groupedPositions" :key="underlyingSymbol" class="mt-3">
+          <b-card>
+            <h3>{{ underlyingSymbol }}</h3>
+            <p>Total Gain/Loss (Closed): {{ formatCurrency(calculateTotalGainLoss(group.closed)) }}</p>
+            <b-button v-b-toggle="'collapse-' + underlyingSymbol" variant="link">Toggle Closed Positions</b-button>
+            <b-table :items="group.opened" :fields="fields" class="mt-3"></b-table>
+          </b-card>
+          <b-collapse :id="'collapse-' + underlyingSymbol">
+            <b-card>
+              <b-table :items="group.closed" :fields="fields" class="mt-3"></b-table>
+            </b-card>
+          </b-collapse>
+        </div>
       </b-col>
     </b-row>
   </b-container>
@@ -25,27 +37,33 @@ export default {
         { key: 'Symbol', label: 'Symbol' },
         { key: 'UnderlyingSymbol', label: 'Underlying Symbol' },
         { key: 'Quantity', label: 'Quantity' },
-        { key: 'CostBasis', label: 'Cost Basis', formatter: (value) => this.$options.filters.currency(value) },
+        { key: 'CostBasis', label: 'Cost Basis', formatter: value => this.formatCurrency(value) },
         { key: 'Opened', label: 'Opened' },
-        { key: 'GainLoss', label: 'Gain / Loss', formatter: (value) => this.$options.filters.currency(value) }
-      ]
+        { key: 'GainLoss', label: 'Gain / Loss', formatter: value => this.formatCurrency(value) }
+      ],
+      collapseStatus: {} // New data property to track collapse status
     };
   },
   computed: {
-    formattedPositions() {
-      return this.positions.map(position => {
-        return {
-          ...position,
-          CostBasis: this.$options.filters.currency(position.CostBasis),
-          GainLoss: this.$options.filters.currency(position.GainLoss)
-        };
-      });
-    },
     filteredPositions() {
       if (this.showOpened) {
-        return this.formattedPositions.filter(position => position.Opened);
+        return this.positions.filter(position => position.Opened);
       }
-      return this.formattedPositions;
+      return this.positions;
+    },
+    groupedPositions() {
+      return this.filteredPositions.reduce((groups, position) => {
+        const underlyingSymbol = position.UnderlyingSymbol;
+        if (!groups[underlyingSymbol]) {
+          groups[underlyingSymbol] = { opened: [], closed: [] };
+        }
+        if (position.Opened) {
+          groups[underlyingSymbol].opened.push(position);
+        } else {
+          groups[underlyingSymbol].closed.push(position);
+        }
+        return groups;
+      }, {});
     }
   },
   async created() {
@@ -68,7 +86,20 @@ export default {
     },
     toggleOpenedFilter() {
       this.showOpened = !this.showOpened;
+    },
+    toggleCollapse(underlyingSymbol) {
+      this.$set(this.collapseStatus, underlyingSymbol, !this.collapseStatus[underlyingSymbol]);
+    },
+    calculateTotalGainLoss(group) {
+      return group.reduce((total, position) => total + parseFloat(position.GainLoss), 0);
+    },
+    formatCurrency(value) {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
     }
   }
 };
 </script>
+
+<style>
+/* Optional: Add some custom styling for the cards and collapse sections */
+</style>
