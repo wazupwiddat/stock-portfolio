@@ -3,14 +3,15 @@
     <b-row>
       <b-col>
         <h1>Positions</h1>
-        <b-button @click="toggleOpenedFilter" class="mb-3">
-          {{ showOpened ? 'Show All Positions' : 'Show Opened Positions' }}
-        </b-button>
         <div v-for="(group, underlyingSymbol) in groupedPositions" :key="underlyingSymbol" class="mt-3">
-          <b-card>
-            <h3>{{ underlyingSymbol }}</h3>
-            <p>Total Gain/Loss (Closed): {{ formatCurrency(calculateTotalGainLoss(group.closed)) }}</p>
+          <b-card class="d-flex justify-content-between align-items-center">
+            <div>
+              <h3>{{ underlyingSymbol }}</h3>
+              <p>Total Gain/Loss (Closed): {{ formatCurrency(calculateTotalGainLoss(group.closed)) }}</p>
+            </div>
             <b-button v-b-toggle="'collapse-' + underlyingSymbol" variant="link">Toggle Closed Positions</b-button>
+          </b-card>
+          <b-card>
             <b-table :items="group.opened" :fields="fields" class="mt-3"></b-table>
           </b-card>
           <b-collapse :id="'collapse-' + underlyingSymbol">
@@ -32,7 +33,6 @@ export default {
   data() {
     return {
       positions: [],
-      showOpened: false, // New data property for toggling
       fields: [
         { key: 'Symbol', label: 'Symbol' },
         { key: 'UnderlyingSymbol', label: 'Underlying Symbol' },
@@ -45,14 +45,8 @@ export default {
     };
   },
   computed: {
-    filteredPositions() {
-      if (this.showOpened) {
-        return this.positions.filter(position => position.Opened);
-      }
-      return this.positions;
-    },
     groupedPositions() {
-      return this.filteredPositions.reduce((groups, position) => {
+      return this.positions.reduce((groups, position) => {
         const underlyingSymbol = position.UnderlyingSymbol;
         if (!groups[underlyingSymbol]) {
           groups[underlyingSymbol] = { opened: [], closed: [] };
@@ -83,9 +77,6 @@ export default {
       } catch (error) {
         console.error('Error fetching positions:', error);
       }
-    },
-    toggleOpenedFilter() {
-      this.showOpened = !this.showOpened;
     },
     toggleCollapse(underlyingSymbol) {
       this.$set(this.collapseStatus, underlyingSymbol, !this.collapseStatus[underlyingSymbol]);

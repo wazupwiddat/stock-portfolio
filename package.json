@@ -11,8 +11,10 @@
     "axios": "^1.7.1",
     "bootstrap": "^4.6.2",
     "bootstrap-vue": "^2.23.1",
+    "chart.js": "^4.4.3",
     "core-js": "^3.8.3",
     "vue": "^2.7.16",
+    "vue-chartjs": "^5.3.1",
     "vue-router": "^3.6.5"
   },
   "devDependencies": {
