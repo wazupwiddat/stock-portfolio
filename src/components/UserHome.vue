@@ -2,13 +2,13 @@
   <b-container>
     <b-row>
       <b-col>
-        <h1 class="text-center">Hello Stock Portfolio</h1>
+        <h6></h6>
         <b-tabs v-model="activeTabIndex">
           <b-tab v-for="account in accounts" :key="account.ID" :title="account.Name">
             <div v-if="account.detailsLoaded">
               <div class="d-flex justify-content-center align-items-center mt-3">
                 <b-card class="text-center" style="width: 50%;">
-                  <h3>Total Gain/Loss (Closed): {{ formatCurrency(calculateTotalGainLoss(account.closedPositions || [])) }}</h3>
+                  <h3>Total Realized Gain/Loss: {{ formatCurrency(calculateTotalGainLoss(account.closedPositions || [])) }}</h3>
                 </b-card>
               </div>
               <div class="mt-3">
@@ -120,6 +120,20 @@ export default {
               borderColor: 'rgba(75, 192, 192, 1)',
               borderWidth: 2,
               fill: false
+            },
+            {
+              label: 'Premium Collected',
+              data: [],
+              borderColor: 'rgba(255, 99, 132, 1)',
+              borderWidth: 2,
+              fill: false
+            },
+            {
+              label: 'Stock Gain/Loss',
+              data: [],
+              borderColor: 'rgba(54, 162, 235, 1)',
+              borderWidth: 2,
+              fill: false
             }
           ]
         };
@@ -143,8 +157,12 @@ export default {
       }
 
       // Calculate cumulative gains/losses up to each month-end
-      const data = [];
+      const cumulativeGainLossData = [];
+      const premiumCollectedData = [];
+      const stockGainLossData = [];
       let cumulativeGainLoss = 0;
+      let cumulativePremium = 0;
+      let cumulativeStockGainLoss = 0;
       let previousEndDate = new Date(firstDate.getFullYear(), firstDate.getMonth(), 1);
 
       labels.forEach((label) => {
@@ -163,8 +181,35 @@ export default {
           return total;
         }, 0);
 
+        const monthlyPremium = sortedPositions.reduce((total, position) => {
+          const firstTransactionDate = new Date(position.Transactions[0].Date);
+          const strippedTransactionDate = new Date(firstTransactionDate.getFullYear(), firstTransactionDate.getMonth(), firstTransactionDate.getDate());
+
+          if (strippedTransactionDate >= startDate && strippedTransactionDate <= labelDate && position.Symbol !== position.UnderlyingSymbol && position.Transactions[0].Quantity < 0) {
+            return total + (position.GainLoss ? parseFloat(position.GainLoss) : 0);
+          }
+
+          return total;
+        }, 0);
+
+        const monthlyStockGainLoss = sortedPositions.reduce((total, position) => {
+          const firstTransactionDate = new Date(position.Transactions[0].Date);
+          const strippedTransactionDate = new Date(firstTransactionDate.getFullYear(), firstTransactionDate.getMonth(), firstTransactionDate.getDate());
+
+          if (strippedTransactionDate >= startDate && strippedTransactionDate <= labelDate && position.Symbol === position.UnderlyingSymbol) {
+            return total + (position.GainLoss ? parseFloat(position.GainLoss) : 0);
+          }
+
+          return total;
+        }, 0);
+
         cumulativeGainLoss += monthlyGainLoss;
-        data.push(cumulativeGainLoss);
+        cumulativePremium += monthlyPremium;
+        cumulativeStockGainLoss += monthlyStockGainLoss;
+
+        cumulativeGainLossData.push(cumulativeGainLoss);
+        premiumCollectedData.push(cumulativePremium);
+        stockGainLossData.push(cumulativeStockGainLoss);
       });
 
       return {
@@ -172,8 +217,22 @@ export default {
         datasets: [
           {
             label: 'Cumulative Gain/Loss',
-            data,
+            data: cumulativeGainLossData,
             borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 2,
+            fill: false
+          },
+          {
+            label: 'Premium Collected',
+            data: premiumCollectedData,
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 2,
+            fill: false
+          },
+          {
+            label: 'Stock Gain/Loss',
+            data: stockGainLossData,
+            borderColor: 'rgba(54, 162, 235, 1)',
             borderWidth: 2,
             fill: false
           }

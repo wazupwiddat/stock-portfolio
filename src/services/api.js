@@ -1,29 +1,23 @@
 import axios from 'axios';
+import { jwtInterceptor, unAuthRedirect } from './jwt.interceptor'; // adjust the import path as necessary
 
 const API_URL = process.env.VUE_APP_API_URL;
 
+// Initialize interceptors
+jwtInterceptor();
+unAuthRedirect();
+
 const api = {
   async getAccounts() {
-    const response = await axios.get(`${API_URL}/protected/accounts`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
-    });
+    const response = await axios.get(`${API_URL}/protected/accounts`);
     return response.data;
   },
   async createAccount(req) {
-    const response = await axios.post(`${API_URL}/protected/accounts`, req, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
-    });
+    const response = await axios.post(`${API_URL}/protected/accounts`, req);
     return response.data;
   },
   async getTransactions(accountId, page = 1, limit = 10) {
     const response = await axios.get(`${API_URL}/protected/transactions`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      },
       params: {
         account_id: accountId,
         page,
@@ -44,11 +38,7 @@ const api = {
       Amount: transactionData.Amount,
       AccountID: transactionData.AccountID
     };
-    const response = await axios.post(`${API_URL}/protected/transactions`, payload, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
-    });
+    const response = await axios.post(`${API_URL}/protected/transactions`, payload);
     return response.data;
   },
   async updateTransaction(transactionData) {
@@ -63,26 +53,15 @@ const api = {
       Amount: transactionData.Amount,
       AccountID: transactionData.AccountID
     };
-    const response = await axios.put(`${API_URL}/protected/transactions/${transactionData.id}`, payload, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
-    });
+    const response = await axios.put(`${API_URL}/protected/transactions/${transactionData.id}`, payload);
     return response.data;
   },
   async deleteTransaction(transactionId) {
-    const response = await axios.delete(`${API_URL}/protected/transactions/${transactionId}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
-    });
+    const response = await axios.delete(`${API_URL}/protected/transactions/${transactionId}`);
     return response.status === 204;
   },
   async getPositions(accountId) {
     const response = await axios.get(`${API_URL}/protected/positions`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      },
       params: {
         account_id: accountId
       }
@@ -101,7 +80,6 @@ const api = {
   async importTransactions(formData) {
     const response = await axios.post(`${API_URL}/protected/transactions/import`, formData, {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
         'Content-Type': 'multipart/form-data'
       }
     });
