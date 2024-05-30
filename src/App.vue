@@ -6,10 +6,8 @@
       <b-collapse id="nav-collapse" is-nav>
         <b-navbar-nav>
           <b-nav-item to="/" tag="router-link">Home</b-nav-item>
+          <b-nav-item v-if="!isLoggedIn" to="/signup" tag="router-link">Sign Up</b-nav-item>
           <b-nav-item v-if="!isLoggedIn" to="/login" tag="router-link">Login</b-nav-item>
-          <b-nav-item v-if="isLoggedIn" to="/protected/accounts" tag="router-link">Accounts</b-nav-item>
-          <b-nav-item v-if="isLoggedIn" to="/protected/transactions" tag="router-link">Transactions</b-nav-item>
-          <b-nav-item v-if="isLoggedIn" to="/protected/positions" tag="router-link">Positions</b-nav-item>
           <b-nav-item v-if="isLoggedIn" @click="logout">Logout</b-nav-item>
         </b-navbar-nav>
       </b-collapse>

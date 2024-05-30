@@ -3,28 +3,60 @@
     <b-row>
       <b-col>
         <h6></h6>
-        <b-tabs v-model="activeTabIndex">
+        <b-tabs v-model="activeTabIndex" @input="handleTabChange">
           <b-tab v-for="account in accounts" :key="account.ID" :title="account.Name">
-            <div v-if="account.detailsLoaded">
-              <div class="d-flex justify-content-center align-items-center mt-3">
-                <b-card class="text-center" style="width: 50%;">
-                  <h3>Total Realized Gain/Loss: {{ formatCurrency(calculateTotalGainLoss(account.closedPositions || [])) }}</h3>
+            <div v-if="account.Name !== '+ New'">
+              <b-navbar toggleable="lg" type="light" variant="light">
+                <b-navbar-toggle target="nav-tabs-collapse"></b-navbar-toggle>
+                <b-collapse id="nav-tabs-collapse" is-nav>
+                  <b-navbar-nav>
+                    <b-nav-item :to="`/protected/transactions?account_id=${account.ID}`" tag="router-link">Transactions</b-nav-item>
+                    <b-nav-item :to="`/protected/positions?account_id=${account.ID}`" tag="router-link">Positions</b-nav-item>
+                  </b-navbar-nav>
+                </b-collapse>
+              </b-navbar>
+              <div v-if="account.detailsLoaded">
+                <div class="d-flex justify-content-center align-items-center mt-3">
+                  <b-card class="text-center" style="width: 50%;">
+                    <h3>Total Realized Gain/Loss: {{ formatCurrency(calculateTotalGainLoss(account.closedPositions || [])) }}</h3>
+                  </b-card>
+                </div>
+                <div class="mt-3">
+                  <line-chart :data="prepareChartData(account.closedPositions || [])"></line-chart>
+                </div>
+                <b-card class="mt-3">
+                  <b-table :items="account.openPositions || []" :fields="fields" class="mt-3"></b-table>
                 </b-card>
+                <div class="text-center mt-3">
+                  <b-button variant="danger" @click="confirmDeleteAccount(account)">Delete Account</b-button>
+                </div>
               </div>
-              <div class="mt-3">
-                <line-chart :data="prepareChartData(account.closedPositions || [])"></line-chart>
+              <div v-else>
+                <b-spinner label="Loading..."></b-spinner>
               </div>
-              <b-card class="mt-3">
-                <b-table :items="account.openPositions || []" :fields="fields" class="mt-3"></b-table>
-              </b-card>
-            </div>
-            <div v-else>
-              <b-spinner label="Loading..."></b-spinner>
             </div>
           </b-tab>
         </b-tabs>
+        <div v-if="accounts.length === 1 && accounts[0].Name === '+ New'" class="text-center mt-5">
+          <p>You don't have any accounts yet. Please create an account to get started.</p>
+          <b-button variant="primary" @click="showCreateAccountModal">Create Account</b-button>
+        </div>
       </b-col>
     </b-row>
+
+    <!-- Create Account Modal -->
+    <b-modal id="create-account-modal" ref="createAccountModal" title="Create Account" @ok="createAccount">
+      <b-form @submit.stop.prevent="createAccount">
+        <b-form-group label="Account Name">
+          <b-form-input v-model="newAccountName" required></b-form-input>
+        </b-form-group>
+      </b-form>
+    </b-modal>
+
+    <!-- Confirm Delete Account Modal -->
+    <b-modal id="confirm-delete-account-modal" ref="confirmDeleteAccountModal" title="Delete Account" @ok="deleteAccount">
+      <p>Are you sure you want to delete this account?</p>
+    </b-modal>
   </b-container>
 </template>
 
@@ -41,6 +73,8 @@ export default {
     return {
       accounts: [],
       activeTabIndex: 0,
+      newAccountName: '',
+      accountToDelete: null,
       fields: [
         { key: 'Symbol', label: 'Symbol' },
         { key: 'UnderlyingSymbol', label: 'Underlying Symbol' },
@@ -52,15 +86,16 @@ export default {
     };
   },
   async created() {
-    await this.fetchAccounts();
-    this.fetchAccountDetails(this.activeTabIndex); // Fetch details for the first tab
-  },
-  watch: {
-    activeTabIndex(newIndex) {
-      this.fetchAccountDetails(newIndex);
-    }
+    await this.loadAccounts();
   },
   methods: {
+    async loadAccounts() {
+      await this.fetchAccounts();
+      this.addNewAccountPlaceholder();
+      if (this.accounts.length > 1) {
+        this.fetchAccountDetails(0); // Fetch details for the first tab if there are accounts
+      }
+    },
     async fetchAccounts() {
       try {
         const response = await api.getAccounts();
@@ -74,8 +109,17 @@ export default {
         console.error('Error fetching accounts:', error);
       }
     },
+    addNewAccountPlaceholder() {
+      this.accounts.push({
+        ID: null,
+        Name: '+ New',
+        closedPositions: [],
+        openPositions: [],
+        detailsLoaded: true
+      });
+    },
     async fetchAccountDetails(accountIndex) {
-      if (!this.accounts || !this.accounts[accountIndex]) {
+      if (!this.accounts || !this.accounts[accountIndex] || this.accounts[accountIndex].Name === '+ New') {
         return;
       }
 
@@ -274,6 +318,48 @@ export default {
           }
         ]
       };
+    },
+    handleTabChange(newIndex) {
+      if (this.accounts[newIndex] && this.accounts[newIndex].Name === '+ New') {
+        console.log(`HandleTabChange with newIndex ${newIndex}`);
+        this.showCreateAccountModal();
+      } else if (newIndex !== null && newIndex < this.accounts.length) {
+        this.fetchAccountDetails(newIndex);
+      }
+    },
+    showCreateAccountModal() {
+      this.$refs.createAccountModal.show();
+    },
+    async createAccount() {
+      try {
+        const newAccount = {
+          Name: this.newAccountName
+        };
+        await api.createAccount(newAccount);
+        this.newAccountName = '';
+        this.$refs.createAccountModal.hide();
+        this.activeTabIndex = 0;
+        await this.loadAccounts()
+      } catch (error) {
+        console.error('Error creating account:', error);
+      }
+    },
+    confirmDeleteAccount(account) {
+      this.accountToDelete = account;
+      this.$refs.confirmDeleteAccountModal.show();
+    },
+    async deleteAccount() {
+      try {
+        await api.deleteAccount(this.accountToDelete.ID);
+        this.accounts = this.accounts.filter(account => account.ID !== this.accountToDelete.ID);
+        this.$refs.confirmDeleteAccountModal.hide();
+        this.accountToDelete = null;
+        if (this.activeTabIndex >= this.accounts.length) {
+          this.activeTabIndex = this.accounts.length - 2;
+        }
+      } catch (error) {
+        console.error('Error deleting account:', error);
+      }
     }
   }
 };
@@ -284,5 +370,11 @@ h1 {
   font-size: 2.5rem;
   color: #2c3e50;
   text-align: center;
+}
+.text-danger {
+  color: red !important;
+}
+.ml-auto {
+  margin-left: auto !important;
 }
 </style>

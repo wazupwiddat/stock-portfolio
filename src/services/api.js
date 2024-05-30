@@ -16,6 +16,10 @@ const api = {
     const response = await axios.post(`${API_URL}/protected/accounts`, req);
     return response.data;
   },
+  async deleteAccount(accountId) {
+    const response = await axios.delete(`${API_URL}/protected/accounts/${accountId}`);
+    return response.status === 204;
+  },
   async getTransactions(accountId, page = 1, limit = 10) {
     const response = await axios.get(`${API_URL}/protected/transactions`, {
       params: {
