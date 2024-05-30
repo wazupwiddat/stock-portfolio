@@ -46,8 +46,8 @@ export default {
         { key: 'UnderlyingSymbol', label: 'Underlying Symbol' },
         { key: 'Quantity', label: 'Quantity' },
         { key: 'CostBasis', label: 'Cost Basis', formatter: value => this.formatCurrency(value) },
-        { key: 'Opened', label: 'Opened' },
-        { key: 'GainLoss', label: 'Gain / Loss', formatter: value => this.formatCurrency(value) }
+        { key: 'currentPrice', label: 'Current Price', formatter: value => this.formatCurrency(value) },
+        { key: 'unrealizedGainLoss', label: 'Unrealized Gain/Loss', formatter: value => this.formatCurrency(value) }
       ]
     };
   },
@@ -90,7 +90,22 @@ export default {
         const positions = await api.getPositions(account.ID);
 
         const closedPositions = positions.filter(position => !position.Opened);
-        const openPositions = positions.filter(position => position.Opened);
+        const openPositions = await Promise.all(positions.filter(position => position.Opened).map(async position => {
+          let currentPrice = null;
+
+          // Fetch current price only for stocks, not options
+          if (position.Symbol === position.UnderlyingSymbol) {
+            currentPrice = await this.fetchCurrentPrice(position.Symbol);
+          }
+
+          const unrealizedGainLoss = this.calculateUnrealizedGainLoss(position, currentPrice);
+
+          return {
+            ...position,
+            currentPrice,
+            unrealizedGainLoss
+          };
+        }));
 
         this.$set(this.accounts, accountIndex, {
           ...account,
@@ -102,6 +117,27 @@ export default {
       } catch (error) {
         console.error('Error fetching account details:', error);
       }
+    },
+    async fetchCurrentPrice(symbol) {
+      try {
+        const response = await api.getCurrentPrice(symbol);
+        return response.currentPrice;
+      } catch (error) {
+        console.error('Error fetching current price:', error);
+        return null;
+      }
+    },
+    calculateUnrealizedGainLoss(position, currentPrice) {
+      const costBasis = position.CostBasis;
+      const quantity = position.Quantity;
+      let unrealizedGainLoss = (currentPrice - costBasis) * quantity;
+
+      // Check if the position is an option
+      if (position.Symbol !== position.UnderlyingSymbol) {
+        unrealizedGainLoss *= 100;
+      }
+
+      return unrealizedGainLoss;
     },
     calculateTotalGainLoss(positions) {
       return positions.reduce((total, position) => total + parseFloat(position.GainLoss), 0);

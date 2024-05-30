@@ -84,6 +84,14 @@ const api = {
       }
     });
     return response.data;
+  },
+  async getCurrentPrice(symbol) {
+    const response = await axios.get(`${API_URL}/protected/quote`, {
+      params: {
+        symbol: symbol
+      }
+    });
+    return response.data;
   }
 };
 
