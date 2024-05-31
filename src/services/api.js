@@ -72,6 +72,10 @@ const api = {
     });
     return response.data;
   },
+  async getAccount(accountId) {
+    const response = await axios.get(`${API_URL}/protected/accounts/${accountId}`);
+    return response.data;
+  },
   async login(email, password) {
     const response = await axios.post(`${API_URL}/login`, { email, password });
     localStorage.setItem('token', response.data.token);
