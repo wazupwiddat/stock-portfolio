@@ -3,12 +3,12 @@
     <b-row>
       <b-col>
         <h1>Import Transactions</h1>
-        <b-form @submit.prevent="handleSubmit">
-          <b-form-group label="Select JSON File">
-            <b-form-file v-model="file" required></b-form-file>
-          </b-form-group>
-          <b-button type="submit" variant="primary">Upload</b-button>
-        </b-form>
+        <b-form @submit.prevent="handleFileUpload">
+            <b-form-group label="Select files to import">
+              <b-form-file v-model="files" multiple required></b-form-file>
+            </b-form-group>
+            <b-button type="submit" variant="primary">Import</b-button>
+          </b-form>
         <hr />
         <h3>Expected File Format</h3>
         <p>The JSON file should be structured as follows:</p>
@@ -26,10 +26,12 @@
 </template>
 
 <script>
+import api from '@/services/api';
+
 export default {
   data() {
     return {
-      file: null,
+      files: null,
       formatExample: JSON.stringify(
         {
           "BrokerageTransactions": [
@@ -286,24 +288,28 @@ export default {
       ]
     };
   },
+  async created() {
+    const accountId = this.$route.query.account_id;
+    if (!accountId) {
+      console.error('Account ID is required');
+      this.$router.push('/');
+      return;
+    }
+    this.accountId = accountId;
+  },
   methods: {
-    async handleSubmit() {
-      if (!this.file) {
-        return;
+    async handleFileUpload() {
+      const formData = new FormData();
+      formData.append('account_id', this.accountId);
+      for (let i = 0; i < this.files.length; i++) {
+        formData.append('file', this.files[i]);
       }
 
-      const formData = new FormData();
-      formData.append('file', this.file);
-
       try {
-        const response = await this.$http.post('/protected/transactions/import', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-        console.log('Upload successful:', response.data);
+        await api.importTransactions(formData);
+        this.$router.push({ path: '/', query: { account_id: this.accountId } });
       } catch (error) {
-        console.error('Upload failed:', error);
+        console.error('Error importing transactions:', error);
       }
     }
   }
