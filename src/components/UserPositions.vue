@@ -42,7 +42,7 @@
               }}
             </p>
             <div style="position: relative; height: 400px;">
-              <line-chart :data="prepareChartData(selectedPosition.closed)" :options="chartOptions" :height="400"></line-chart>
+              <line-chart :data="prepareChartData(selectedPosition.closed)" :options="chartOptions" :height="400" :showSecondaryYAxis="true"></line-chart>
             </div>
           </div>
           <b-table :items="selectedPosition.opened" :fields="openFields" class="mt-3"></b-table>

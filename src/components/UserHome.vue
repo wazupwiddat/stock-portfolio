@@ -22,7 +22,7 @@
                   </b-card>
                 </div>
                 <div class="mt-3">
-                  <line-chart :data="prepareChartData(account.closedPositions || [])"></line-chart>
+                  <line-chart :data="prepareChartData(account.closedPositions || [])" :showSecondaryYAxis="false"></line-chart>
                 </div>
                 <b-card class="mt-3">
                   <b-table :items="account.openPositions || []" :fields="fields" class="mt-3"></b-table>
@@ -321,7 +321,6 @@ export default {
     },
     handleTabChange(newIndex) {
       if (this.accounts[newIndex] && this.accounts[newIndex].Name === '+ New') {
-        console.log(`HandleTabChange with newIndex ${newIndex}`);
         this.showCreateAccountModal();
       } else if (newIndex !== null && newIndex < this.accounts.length) {
         this.fetchAccountDetails(newIndex);
@@ -339,7 +338,7 @@ export default {
         this.newAccountName = '';
         this.$refs.createAccountModal.hide();
         this.activeTabIndex = 0;
-        await this.loadAccounts()
+        await this.loadAccounts();
       } catch (error) {
         console.error('Error creating account:', error);
       }

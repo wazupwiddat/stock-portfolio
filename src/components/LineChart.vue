@@ -28,33 +28,16 @@
           responsive: true, 
           maintainAspectRatio: false
         })
+      },
+      showSecondaryYAxis: {
+        type: Boolean,
+        default: false
       }
     },
     data() {
       return {
         chartData: this.data,
-        chartOptions: {
-          ...this.options,
-          scales: {
-            'y-axis-1': {
-              type: 'linear',
-              position: 'left',
-              ticks: {
-                beginAtZero: true
-              }
-            },
-            'y-axis-2': {
-              type: 'linear',
-              position: 'right',
-              ticks: {
-                beginAtZero: true
-              },
-              grid: {
-                drawOnChartArea: false // only want the grid lines for one axis to show up
-              }
-            }
-          }
-        }
+        chartOptions: this.getChartOptions()
       };
     },
     watch: {
@@ -62,27 +45,40 @@
         this.chartData = newData;
       },
       options(newOptions) {
-        this.chartOptions = {
-          ...newOptions,
-          scales: {
-            'y-axis-1': {
-              type: 'linear',
-              position: 'left',
-              ticks: {
-                beginAtZero: true
-              }
-            },
-            'y-axis-2': {
-              type: 'linear',
-              position: 'right',
-              ticks: {
-                beginAtZero: true
-              },
-              grid: {
-                drawOnChartArea: false // only want the grid lines for one axis to show up
-              }
+        this.chartOptions = this.getChartOptions(newOptions);
+      },
+      showSecondaryYAxis() {
+        this.chartOptions = this.getChartOptions();
+      }
+    },
+    methods: {
+      getChartOptions(options = this.options) {
+        const scales = {
+          'y-axis-1': {
+            type: 'linear',
+            position: 'left',
+            ticks: {
+              beginAtZero: true
             }
           }
+        };
+  
+        if (this.showSecondaryYAxis) {
+          scales['y-axis-2'] = {
+            type: 'linear',
+            position: 'right',
+            ticks: {
+              beginAtZero: true
+            },
+            grid: {
+              drawOnChartArea: false // only want the grid lines for one axis to show up
+            }
+          };
+        }
+  
+        return {
+          ...options,
+          scales
         };
       }
     }
