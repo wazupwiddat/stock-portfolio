@@ -100,6 +100,14 @@ const api = {
       }
     });
     return response.data;
+  },
+  async getHistoricalPrices(symbol) {
+    const response = await axios.get(`${API_URL}/protected/quotes`, {
+      params: {
+        symbol: symbol
+      }
+    });
+    return response.data.prices;
   }
 };
 

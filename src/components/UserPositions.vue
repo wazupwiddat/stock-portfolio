@@ -93,7 +93,30 @@ export default {
       ],
       chartOptions: {
         responsive: true,
-        maintainAspectRatio: false
+        maintainAspectRatio: false,
+        scales: {
+          yAxes: [
+            {
+              id: 'y-axis-1',
+              type: 'linear',
+              position: 'left',
+              ticks: {
+                beginAtZero: true
+              }
+            },
+            {
+              id: 'y-axis-2',
+              type: 'linear',
+              position: 'right',
+              ticks: {
+                beginAtZero: true
+              },
+              gridLines: {
+                drawOnChartArea: false // only want the grid lines for one axis to show up
+              }
+            }
+          ]
+        }
       }
     };
   },
@@ -125,7 +148,7 @@ export default {
     const accountId = this.$route.query.account_id;
     if (!accountId) {
       console.error('Account ID is required');
-      this.$router.push('/protected/accounts');
+      this.$router.push('/');
       return;
     }
     await this.fetchAccountName(accountId);
@@ -184,12 +207,25 @@ export default {
         console.error('Error fetching account name:', error);
       }
     },
+    async selectPosition(position) {
+      let newSelectedPosition = position;
+      this.searchQuery = ''; // Clear the search box
+
+      // Fetch historical prices for the selected position
+      try {
+        const historicalPrices = await api.getHistoricalPrices(position.UnderlyingSymbol);
+        newSelectedPosition.historicalPrices = historicalPrices.map(price => ({
+          ...price,
+          Date: new Date(price.Date) // Convert to Date object for comparison
+        }));
+        this.selectedPosition = newSelectedPosition;
+      } catch (error) {
+        console.error('Error fetching historical prices:', error);
+        this.selectedPosition.historicalPrices = [];
+      }
+    },
     onSearchInput() {
       this.selectedPosition = null; // Hide the selected position when the user starts typing
-    },
-    selectPosition(position) {
-      this.selectedPosition = position;
-      this.searchQuery = ''; // Clear the search box
     },
     calculateTotalGainLoss(group) {
       return group.reduce((total, position) => total + parseFloat(position.GainLoss), 0);
@@ -222,6 +258,14 @@ export default {
               borderColor: 'rgba(54, 162, 235, 1)',
               borderWidth: 2,
               fill: false
+            },
+            {
+              label: 'Historical Prices',
+              data: [],
+              borderColor: 'rgba(75, 0, 130, 1)',
+              borderWidth: 2,
+              fill: false,
+              yAxisID: 'y-axis-2'
             }
           ]
         };
@@ -248,6 +292,7 @@ export default {
       const cumulativeGainLossData = [];
       const premiumCollectedData = [];
       const stockGainLossData = [];
+      const historicalPricesData = [];
       let cumulativeGainLoss = 0;
       let cumulativePremium = 0;
       let cumulativeStockGainLoss = 0;
@@ -291,6 +336,12 @@ export default {
           return total;
         }, 0);
 
+        const historicalPrice = this.selectedPosition.historicalPrices.find(price => {
+          const priceDate = new Date(price.Date);
+          return priceDate >= startDate && priceDate <= labelDate;
+        });
+        const historicalClosePrice = historicalPrice ? historicalPrice.Close : null;
+
         cumulativeGainLoss += monthlyGainLoss;
         cumulativePremium += monthlyPremium;
         cumulativeStockGainLoss += monthlyStockGainLoss;
@@ -298,6 +349,7 @@ export default {
         cumulativeGainLossData.push(cumulativeGainLoss);
         premiumCollectedData.push(cumulativePremium);
         stockGainLossData.push(cumulativeStockGainLoss);
+        historicalPricesData.push(historicalClosePrice);
       });
 
       return {
@@ -308,21 +360,32 @@ export default {
             data: cumulativeGainLossData,
             borderColor: 'rgba(75, 192, 192, 1)',
             borderWidth: 2,
-            fill: false
+            fill: false,
+            yAxisID: 'y-axis-1'
           },
           {
             label: 'Premium Collected',
             data: premiumCollectedData,
             borderColor: 'rgba(255, 99, 132, 1)',
             borderWidth: 2,
-            fill: false
+            fill: false,
+            yAxisID: 'y-axis-1'
           },
           {
             label: 'Stock Gain/Loss',
             data: stockGainLossData,
             borderColor: 'rgba(54, 162, 235, 1)',
             borderWidth: 2,
-            fill: false
+            fill: false,
+            yAxisID: 'y-axis-1'
+          },
+          {
+            label: 'Historical Prices',
+            data: historicalPricesData,
+            borderColor: 'rgba(75, 0, 130, 1)',
+            borderWidth: 2,
+            fill: false,
+            yAxisID: 'y-axis-2'
           }
         ]
       };

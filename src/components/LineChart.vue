@@ -34,10 +34,57 @@
       return {
         chartData: this.data,
         chartOptions: {
-          responsive: true,
-          maintainAspectRatio: false
+          ...this.options,
+          scales: {
+            'y-axis-1': {
+              type: 'linear',
+              position: 'left',
+              ticks: {
+                beginAtZero: true
+              }
+            },
+            'y-axis-2': {
+              type: 'linear',
+              position: 'right',
+              ticks: {
+                beginAtZero: true
+              },
+              grid: {
+                drawOnChartArea: false // only want the grid lines for one axis to show up
+              }
+            }
+          }
         }
       };
+    },
+    watch: {
+      data(newData) {
+        this.chartData = newData;
+      },
+      options(newOptions) {
+        this.chartOptions = {
+          ...newOptions,
+          scales: {
+            'y-axis-1': {
+              type: 'linear',
+              position: 'left',
+              ticks: {
+                beginAtZero: true
+              }
+            },
+            'y-axis-2': {
+              type: 'linear',
+              position: 'right',
+              ticks: {
+                beginAtZero: true
+              },
+              grid: {
+                drawOnChartArea: false // only want the grid lines for one axis to show up
+              }
+            }
+          }
+        };
+      }
     }
   };
   </script>
