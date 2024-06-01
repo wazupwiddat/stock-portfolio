@@ -1,5 +1,9 @@
 <template>
-    <line-chart-generator :data="chartData" :options="chartOptions" :height="height"/>
+    <line-chart-generator 
+        :data="chartData" 
+        :options="chartOptions" 
+        :height="height" 
+        :showSecondaryYAxis="showSecondaryYAxis"/>
   </template>
   
   <script>

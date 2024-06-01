@@ -10,8 +10,8 @@
                 <b-navbar-toggle target="nav-tabs-collapse"></b-navbar-toggle>
                 <b-collapse id="nav-tabs-collapse" is-nav>
                   <b-navbar-nav>
-                    <b-nav-item :to="`/protected/transactions?account_id=${account.ID}`" tag="router-link">Transactions</b-nav-item>
                     <b-nav-item :to="`/protected/positions?account_id=${account.ID}`" tag="router-link">Positions</b-nav-item>
+                    <b-nav-item :to="`/protected/transactions?account_id=${account.ID}`" tag="router-link">Transactions</b-nav-item>
                   </b-navbar-nav>
                 </b-collapse>
               </b-navbar>
@@ -22,7 +22,7 @@
                   </b-card>
                 </div>
                 <div class="mt-3">
-                  <line-chart :data="prepareChartData(account.closedPositions || [])" :showSecondaryYAxis="false"></line-chart>
+                  <line-chart :data="prepareChartData(account.closedPositions || [])" :options="chartOptions" :showSecondaryYAxis="false"></line-chart>
                 </div>
                 <b-card class="mt-3">
                   <b-table :items="account.openPositions || []" :fields="fields" class="mt-3"></b-table>
@@ -82,7 +82,23 @@ export default {
         { key: 'CostBasis', label: 'Cost Basis', formatter: value => this.formatCurrency(value) },
         { key: 'currentPrice', label: 'Current Price', formatter: value => this.formatCurrency(value) },
         { key: 'unrealizedGainLoss', label: 'Unrealized Gain/Loss', formatter: value => this.formatCurrency(value) }
-      ]
+      ],
+      chartOptions: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          yAxes: [
+            {
+              id: 'y-axis-1',
+              type: 'linear',
+              position: 'left',
+              ticks: {
+                beginAtZero: true
+              }
+            }
+          ]
+        }
+      }
     };
   },
   async created() {
@@ -199,21 +215,24 @@ export default {
               data: [],
               borderColor: 'rgba(75, 192, 192, 1)',
               borderWidth: 2,
-              fill: false
+              fill: false,
+              yAxisID: 'y-axis-1'
             },
             {
               label: 'Premium Collected',
               data: [],
               borderColor: 'rgba(255, 99, 132, 1)',
               borderWidth: 2,
-              fill: false
+              fill: false,
+              yAxisID: 'y-axis-1'
             },
             {
               label: 'Stock Gain/Loss',
               data: [],
               borderColor: 'rgba(54, 162, 235, 1)',
               borderWidth: 2,
-              fill: false
+              fill: false,
+              yAxisID: 'y-axis-1'
             }
           ]
         };
@@ -300,21 +319,24 @@ export default {
             data: cumulativeGainLossData,
             borderColor: 'rgba(75, 192, 192, 1)',
             borderWidth: 2,
-            fill: false
+            fill: false,
+            yAxisID: 'y-axis-1'
           },
           {
             label: 'Premium Collected',
             data: premiumCollectedData,
             borderColor: 'rgba(255, 99, 132, 1)',
             borderWidth: 2,
-            fill: false
+            fill: false,
+            yAxisID: 'y-axis-1'
           },
           {
             label: 'Stock Gain/Loss',
             data: stockGainLossData,
             borderColor: 'rgba(54, 162, 235, 1)',
             borderWidth: 2,
-            fill: false
+            fill: false,
+            yAxisID: 'y-axis-1'
           }
         ]
       };
