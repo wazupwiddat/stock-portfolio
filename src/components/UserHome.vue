@@ -2,44 +2,47 @@
   <b-container>
     <b-row>
       <b-col>
-        <h6></h6>
-        <b-tabs v-model="activeTabIndex" @input="handleTabChange">
-          <b-tab v-for="account in accounts" :key="account.ID" :title="account.Name">
-            <div v-if="account.Name !== '+ New'">
-              <b-navbar toggleable="lg" type="light" variant="light">
-                <b-navbar-toggle target="nav-tabs-collapse"></b-navbar-toggle>
-                <b-collapse id="nav-tabs-collapse" is-nav>
-                  <b-navbar-nav>
-                    <b-nav-item :to="`/protected/positions?account_id=${account.ID}`" tag="router-link">Positions</b-nav-item>
-                    <b-nav-item :to="`/protected/transactions?account_id=${account.ID}`" tag="router-link">Transactions</b-nav-item>
-                  </b-navbar-nav>
-                </b-collapse>
-              </b-navbar>
-              <div v-if="account.detailsLoaded">
-                <div class="d-flex justify-content-center align-items-center mt-3">
-                  <b-card class="text-center" style="width: 50%;">
-                    <h3>Total Realized Gain/Loss: {{ formatCurrency(calculateTotalGainLoss(account.closedPositions || [])) }}</h3>
-                  </b-card>
-                </div>
-                <div class="mt-3">
-                  <line-chart :data="prepareChartData(account.closedPositions || [])" :options="chartOptions" :showSecondaryYAxis="false"></line-chart>
-                </div>
-                <b-card class="mt-3">
-                  <b-table :items="account.openPositions || []" :fields="fields" class="mt-3"></b-table>
-                </b-card>
-                <div class="text-center mt-3">
-                  <b-button variant="danger" @click="confirmDeleteAccount(account)">Delete Account</b-button>
-                </div>
-              </div>
-              <div v-else>
-                <b-spinner label="Loading..."></b-spinner>
-              </div>
-            </div>
-          </b-tab>
-        </b-tabs>
-        <div v-if="accounts.length === 1 && accounts[0].Name === '+ New'" class="text-center mt-5">
-          <p>You don't have any accounts yet. Please create an account to get started.</p>
+        <div v-if="accounts.length === 0" class="text-center mt-5">
           <b-button variant="primary" @click="showCreateAccountModal">Create Account</b-button>
+        </div>
+        <div v-if="accounts.length > 0">
+          <div class="text-right mb-2">
+            <b-button size="sm" variant="primary" @click="showCreateAccountModal">Create Account</b-button>
+          </div>
+          <b-tabs v-model="activeTabIndex" @input="handleTabChange">
+            <b-tab v-for="account in accounts" :key="account.ID" :title="account.Name">
+              <div>
+                <b-navbar toggleable="lg" type="light" variant="light">
+                  <b-navbar-toggle target="nav-tabs-collapse"></b-navbar-toggle>
+                  <b-collapse id="nav-tabs-collapse" is-nav>
+                    <b-navbar-nav>
+                      <b-nav-item :to="`/protected/positions?account_id=${account.ID}`" tag="router-link">Positions</b-nav-item>
+                      <b-nav-item :to="`/protected/transactions?account_id=${account.ID}`" tag="router-link">Transactions</b-nav-item>
+                    </b-navbar-nav>
+                  </b-collapse>
+                </b-navbar>
+                <div v-if="account.detailsLoaded">
+                  <div class="d-flex justify-content-center align-items-center mt-3">
+                    <b-card class="text-center" style="width: 50%;">
+                      <h3>Total Realized Gain/Loss: {{ formatCurrency(calculateTotalGainLoss(account.closedPositions || [])) }}</h3>
+                    </b-card>
+                  </div>
+                  <div class="mt-3">
+                    <line-chart :data="prepareChartData(account.closedPositions || [])" :options="chartOptions" :showSecondaryYAxis="false"></line-chart>
+                  </div>
+                  <b-card class="mt-3">
+                    <b-table :items="account.openPositions || []" :fields="fields" class="mt-3"></b-table>
+                  </b-card>
+                  <div class="text-center mt-3">
+                    <b-button variant="danger" @click="confirmDeleteAccount(account)">Delete Account</b-button>
+                  </div>
+                </div>
+                <div v-else>
+                  <b-spinner label="Loading..."></b-spinner>
+                </div>
+              </div>
+            </b-tab>
+          </b-tabs>
         </div>
       </b-col>
     </b-row>
@@ -107,8 +110,7 @@ export default {
   methods: {
     async loadAccounts() {
       await this.fetchAccounts();
-      this.addNewAccountPlaceholder();
-      if (this.accounts.length > 1) {
+      if (this.accounts.length > 0) {
         this.fetchAccountDetails(0); // Fetch details for the first tab if there are accounts
       }
     },
@@ -125,17 +127,8 @@ export default {
         console.error('Error fetching accounts:', error);
       }
     },
-    addNewAccountPlaceholder() {
-      this.accounts.push({
-        ID: null,
-        Name: '+ New',
-        closedPositions: [],
-        openPositions: [],
-        detailsLoaded: true
-      });
-    },
     async fetchAccountDetails(accountIndex) {
-      if (!this.accounts || !this.accounts[accountIndex] || this.accounts[accountIndex].Name === '+ New') {
+      if (!this.accounts || !this.accounts[accountIndex]) {
         return;
       }
 
@@ -342,9 +335,7 @@ export default {
       };
     },
     handleTabChange(newIndex) {
-      if (this.accounts[newIndex] && this.accounts[newIndex].Name === '+ New') {
-        this.showCreateAccountModal();
-      } else if (newIndex !== null && newIndex < this.accounts.length) {
+      if (newIndex >= 0 && newIndex < this.accounts.length) {
         this.fetchAccountDetails(newIndex);
       }
     },

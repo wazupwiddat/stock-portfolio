@@ -1,12 +1,13 @@
 <template>
   <div id="app">
     <b-navbar toggleable="lg" type="dark" variant="dark">
-      <b-navbar-brand href="#">Stock Portfolio App</b-navbar-brand>
+      <b-navbar-brand href="#">
+        <img src="@/assets/logo.png" alt="OptiCycle Logo" class="logo"> OptiCycle
+      </b-navbar-brand>
       <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
       <b-collapse id="nav-collapse" is-nav>
         <b-navbar-nav>
           <b-nav-item to="/" tag="router-link">Home</b-nav-item>
-          <b-nav-item v-if="!isLoggedIn" to="/signup" tag="router-link">Sign Up</b-nav-item>
           <b-nav-item v-if="!isLoggedIn" to="/login" tag="router-link">Login</b-nav-item>
           <b-nav-item v-if="isLoggedIn" @click="logout">Logout</b-nav-item>
         </b-navbar-nav>
@@ -43,5 +44,10 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
+}
+
+.logo {
+  height: 30px;
+  margin-right: 10px;
 }
 </style>

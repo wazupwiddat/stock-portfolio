@@ -214,7 +214,7 @@ export default {
       // Fetch historical prices for the selected position
       try {
         const historicalPrices = await api.getHistoricalPrices(position.UnderlyingSymbol);
-        newSelectedPosition.historicalPrices = historicalPrices.map(price => ({
+        newSelectedPosition.historicalPrices = historicalPrices?.map(price => ({
           ...price,
           Date: new Date(price.Date) // Convert to Date object for comparison
         }));
@@ -336,7 +336,7 @@ export default {
           return total;
         }, 0);
 
-        const historicalPrice = this.selectedPosition.historicalPrices.find(price => {
+        const historicalPrice = this.selectedPosition?.historicalPrices?.find(price => {
           const priceDate = new Date(price.Date);
           return priceDate >= startDate && priceDate <= labelDate;
         });

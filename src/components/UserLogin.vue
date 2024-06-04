@@ -1,22 +1,32 @@
 <template>
-  <b-container class="d-flex justify-content-center align-items-center vh-100">
-    <b-row>
-      <b-col>
-        <b-card class="login-card">
-          <b-form @submit.prevent="onSubmit">
-            <b-form-group label="Email">
-              <b-form-input v-model="email" type="email" required></b-form-input>
-            </b-form-group>
-            <b-form-group label="Password">
-              <b-form-input v-model="password" type="password" required></b-form-input>
-            </b-form-group>
-            <b-button type="submit" variant="primary">Login</b-button>
-          </b-form>
-        </b-card>
-      </b-col>
-    </b-row>
-  </b-container>
+  <div class="container-sm">
+    <div class="login-width">
+      <h1 class="text-center">Login</h1>
+      <form action="#" @submit.prevent="onSubmit">
+        <input
+          class="form-control w-100 mb-2"
+          type="email"
+          placeholder="Email"
+          v-model="email"
+        />
+
+        <input
+          class="form-control w-100 mb-2"
+          type="password"
+          placeholder="Password"
+          v-model="password"
+        />
+
+        <button class="btn btn-dark mt-2 w-100" type="submit">Login</button>
+        <p class="error-message">{{ error }}</p>
+      </form>
+      <p>
+        Don't have an account? <router-link to="/signup">Sign Up!</router-link>
+      </p>
+    </div>
+  </div>
 </template>
+
 
 <script>
 import api from '@/services/api';
@@ -28,6 +38,7 @@ export default {
     return {
       email: '',
       password: '',
+      error: "",
     };
   },
   methods: {
@@ -36,6 +47,8 @@ export default {
         await api.login(this.email, this.password);
         mutations.setLoggedIn(true);
         this.$router.push('/');
+        this.email = "";
+        this.password = "";
       } catch (error) {
         alert('Login failed');
       }
@@ -45,12 +58,38 @@ export default {
 </script>
 
 <style scoped>
-.login-card {
-  max-width: 400px;
-  margin: auto;
-  border: 1px solid #dee2e6;
-  border-radius: 0.25rem;
-  padding: 1.5rem;
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-}
+form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  label {
+    margin-bottom: 15px;
+  }
+  
+  button {
+    margin: 0 auto;
+    width: 200px;
+  }
+  
+  .error-message {
+    color: red;
+  }
+  .login-width {
+    margin: 100px auto;
+    max-width: 400px;
+    border: 1px solid black;
+    padding: 20px;
+    border-radius: 20px;
+    -webkit-box-shadow: 0px 0px 15px 5px #a6a6a6;
+    box-shadow: 0px 0px 15px 5px #a6a6a6;
+  }
+  p {
+    text-align: center;
+  }
+  
+  h1 {
+    padding-bottom: 20px;
+  }
 </style>
