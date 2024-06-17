@@ -232,11 +232,13 @@ export default {
       }
 
       // Sort positions by the date of the first transaction in ascending order
-      const sortedPositions = [...positions].sort((a, b) => new Date(a.Transactions[0]?.Date) - new Date(b.Transactions[0]?.Date));
+      const sortedPositions = [...positions].sort((a, b) => new Date(a.OpenDate) - new Date(b.OpenDate));
 
       // Determine the first and last transaction dates
-      const firstDate = new Date(sortedPositions[0].Transactions[0]?.Date);
-      const lastDate = new Date(sortedPositions[sortedPositions.length - 1].Transactions[0]?.Date);
+      const firstDate = new Date(sortedPositions[0].OpenDate);
+      console.log(firstDate);
+      console.log(sortedPositions[0])
+      const lastDate = new Date(sortedPositions[sortedPositions.length - 1].OpenDate);
 
       // Generate labels for each month-end between the first and last date
       const labels = [];
@@ -263,7 +265,7 @@ export default {
         previousEndDate = labelDate;
 
         const monthlyGainLoss = sortedPositions.reduce((total, position) => {
-          const firstTransactionDate = new Date(position.Transactions[0].Date);
+          const firstTransactionDate = new Date(position.OpenDate);
           const strippedTransactionDate = new Date(firstTransactionDate.getFullYear(), firstTransactionDate.getMonth(), firstTransactionDate.getDate());
 
           if (strippedTransactionDate >= startDate && strippedTransactionDate <= labelDate) {
@@ -274,10 +276,10 @@ export default {
         }, 0);
 
         const monthlyPremium = sortedPositions.reduce((total, position) => {
-          const firstTransactionDate = new Date(position.Transactions[0].Date);
+          const firstTransactionDate = new Date(position.OpenDate);
           const strippedTransactionDate = new Date(firstTransactionDate.getFullYear(), firstTransactionDate.getMonth(), firstTransactionDate.getDate());
 
-          if (strippedTransactionDate >= startDate && strippedTransactionDate <= labelDate && position.Symbol !== position.UnderlyingSymbol && position.Transactions[0].Quantity < 0) {
+          if (strippedTransactionDate >= startDate && strippedTransactionDate <= labelDate && position.Symbol !== position.UnderlyingSymbol && position.Short) {
             return total + (position.GainLoss ? parseFloat(position.GainLoss) : 0);
           }
 
@@ -285,7 +287,7 @@ export default {
         }, 0);
 
         const monthlyStockGainLoss = sortedPositions.reduce((total, position) => {
-          const firstTransactionDate = new Date(position.Transactions[0].Date);
+          const firstTransactionDate = new Date(position.OpenDate);
           const strippedTransactionDate = new Date(firstTransactionDate.getFullYear(), firstTransactionDate.getMonth(), firstTransactionDate.getDate());
 
           if (strippedTransactionDate >= startDate && strippedTransactionDate <= labelDate && position.Symbol === position.UnderlyingSymbol) {
